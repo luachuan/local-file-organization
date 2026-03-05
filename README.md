@@ -99,37 +99,11 @@ Edit `~/.config/file-organizer.json` to customize:
 }
 ```
 
-## 💰 3层盈利体系
-### 🆓 免费开源版（获客引流基本盘）
-- 现有核心功能100%开源免费
-- 无功能阉割
-- 持续优化，作为获客核心
-
-### 💼 Pro付费版（核心营收来源）
-- **核心高阶功能**：
-  - AI自定义规则训练
-  - 多文件夹联动管理
-  - 正则高级规则
-  - 定时备份回滚
-  - 远程服务器批量操作
-  - OpenClaw深度集成自动化工作流
-  - 专属更新优先
-- **定价**：
-  - 单用户：9.9美元终身授权
-  - 小团队：29美元终身授权
-
-### 🏢 企业定制服务（高客单价补充）
-- 针对中小团队/企业的定制化开发、私有化部署、运维支持
-- 按项目报价，起步500美元/项目
-- 有需求再承接，不占用核心精力
-
----
-
-## 📝 Pro版需求登记
-有 Pro 版功能需求？请在 [GitHub Issues](https://github.com/luachuan/local-file-organization/issues) 提交！我们会先验证用户付费意愿，再启动 Pro 版功能开发！
+## 💡 Future Plans / 未来计划
+We're planning to add more features based on user feedback! If you have ideas or feature requests, please open a [GitHub Issue](https://github.com/luachuan/local-file-organization/issues)!
 
 ---
 
 ## License / 许可
 
-MIT (免费开源版）
+MIT
