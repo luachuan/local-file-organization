@@ -1,0 +1,15 @@
+{
+  "name": "local-file-organizer",
+  "version": "1.0.0",
+  "description": "本地文件整理助手 - 按类型/日期整理文件，删除重复项，支持预览和撤销！",
+  "main": "index.js",
+  "bin": {
+    "file-organizer": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["file-organizer", "local", "automation", "privacy"],
+  "author": "可乐Echo",
+  "license": "MIT"
+}
