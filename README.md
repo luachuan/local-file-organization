@@ -29,6 +29,13 @@ I got tired of my Downloads folder being a mess—so I built this simple tool to
 - **Config file** - customize types and target folders at ~/.config/file-organizer.json / **配置文件** - 在 ~/.config/file-organizer.json 自定义类型和目标文件夹
 - **100% local** - no cloud, no data leaks / **100% 本地** - 不上云，不泄露数据
 
+---
+
+## 🤝 Zero-Token Partner / 零 Token 搭档推荐
+If you're an OpenClaw user tired of token costs, check out [openclaw-zero-token](https://github.com/linuxhsj/openclaw-zero-token) — use all major AI models completely free with no API tokens!
+
+如果你是 OpenClaw 用户，厌倦了 Token 消耗，推荐看看 [openclaw-zero-token](https://github.com/linuxhsj/openclaw-zero-token) — 零 API Token，免费使用所有主流 AI 模型！
+
 ## Quick Start / 快速开始（零配置开箱即用）
 
 ### Install / 安装（一行命令）
