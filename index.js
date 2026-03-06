@@ -76,22 +76,37 @@ function getFileHash(filePath) {
   return hash.digest('hex');
 }
 
-function organizeByType(dir, config, preview = false) {
-  const files = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isFile());
+function getAllFiles(dir, recursive = false) {
+  let files = [];
+  const entries = fs.readdirSync(dir);
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry);
+    const stat = fs.statSync(fullPath);
+    if (stat.isFile()) {
+      files.push(fullPath);
+    } else if (stat.isDirectory() && recursive) {
+      files = files.concat(getAllFiles(fullPath, recursive));
+    }
+  }
+  return files;
+}
+
+function organizeByType(dir, config, preview = false, recursive = false) {
+  const files = getAllFiles(dir, recursive).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
     const src = path.join(dir, file);
     const type = getFileType(src, config);
     const targetDir = path.join(dir, config.targetDirs[type]);
-    const dest = path.join(targetDir, file);
+    const dest = path.join(targetDir, path.basename(file));
     operations.push({ type: 'move', src, dest, targetDir, file });
   }
 
   if (preview) {
     console.log('=== Preview: Would organize %d files ===', operations.length);
     for (const op of operations) {
-      console.log('  %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], op.file));
+      console.log('  %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
     }
     return { preview: true, operations };
   }
@@ -118,8 +133,8 @@ function organizeByType(dir, config, preview = false) {
   return report;
 }
 
-function organizeByDate(dir, config, preview = false) {
-  const files = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isFile());
+function organizeByDate(dir, config, preview = false, recursive = false) {
+  const files = getAllFiles(dir, recursive).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
@@ -129,7 +144,7 @@ function organizeByDate(dir, config, preview = false) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const targetDir = path.join(dir, String(year), month);
-    const dest = path.join(targetDir, file);
+    const dest = path.join(targetDir, path.basename(file));
     operations.push({ type: 'move', src, dest, targetDir, file });
   }
 
@@ -138,7 +153,7 @@ function organizeByDate(dir, config, preview = false) {
     for (const op of operations) {
       const stat = fs.statSync(op.src);
       const date = new Date(stat.mtime);
-      console.log('  %s → %d/%s/%s', op.file, date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), op.file);
+      console.log('  %s → %d/%s/%s', op.file, date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
     }
     return { preview: true, operations };
   }
@@ -165,19 +180,19 @@ function organizeByDate(dir, config, preview = false) {
   return report;
 }
 
-function dedupe(dir, config, preview = false) {
-  const files = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isFile());
+function dedupe(dir, config, preview = false, recursive = false) {
+  const files = getAllFiles(dir, recursive);
   const hashes = new Map();
   const operations = [];
 
   for (const file of files) {
-    const src = path.join(dir, file);
+    const src = file;
     try {
       const hash = getFileHash(src);
       if (hashes.has(hash)) {
-        operations.push({ type: 'delete', path: src, file, original: hashes.get(hash) });
+        operations.push({ type: 'delete', path: src, file: path.relative(dir, src), original: path.relative(dir, hashes.get(hash)) });
       } else {
-        hashes.set(hash, file);
+        hashes.set(hash, src);
       }
     } catch (e) {
       // skip
@@ -262,6 +277,7 @@ const args = process.argv.slice(2);
 const command = args[0];
 const config = loadConfig();
 const preview = args.includes('--preview');
+const recursive = args.includes('--recursive') || args.includes('-r');
 
 // 找到目录参数
 let targetDir = process.cwd();
@@ -273,11 +289,11 @@ for (let i = 1; i < args.length; i++) {
 }
 
 if (command === 'organize' && args.includes('--type')) {
-  console.log(organizeByType(targetDir, config, preview));
+  console.log(organizeByType(targetDir, config, preview, recursive));
 } else if (command === 'organize' && args.includes('--date')) {
-  console.log(organizeByDate(targetDir, config, preview));
+  console.log(organizeByDate(targetDir, config, preview, recursive));
 } else if (command === 'dedupe') {
-  console.log(dedupe(targetDir, config, preview));
+  console.log(dedupe(targetDir, config, preview, recursive));
 } else if (command === 'undo') {
   undoLast();
 } else if (command === 'report') {
@@ -291,8 +307,8 @@ if (command === 'organize' && args.includes('--type')) {
   }
 } else {
   console.log('Usage:');
-  console.log('  node index.js organize --type|--date [--preview] <dir>  Organize files');
-  console.log('  node index.js dedupe [--preview] <dir>                  Remove duplicates');
+  console.log('  node index.js organize --type|--date [--preview] [--recursive|-r] <dir>  Organize files');
+  console.log('  node index.js dedupe [--preview] [--recursive|-r] <dir>                  Remove duplicates');
   console.log('  node index.js undo                                          Undo last operation');
   console.log('  node index.js report <dir>                                   Generate report');
   console.log('  node index.js config [--init]                                Show/init config');

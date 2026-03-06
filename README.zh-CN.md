@@ -96,14 +96,22 @@ git clone https://github.com/luachuan/local-file-organization.git &amp;&amp; cd 
 # 预览按类型整理（不实际执行）
 ./index.js organize --type --preview ~/Downloads
 
+# 按类型递归整理（包含子目录）
+./index.js organize --type --recursive ~/Downloads
+
 # 按日期整理
 ./index.js organize --date ~/Downloads
+
+# 按日期递归整理
+./index.js organize --date -r ~/Downloads
 
 # 预览删除重复文件
 ./index.js dedupe --preview ~/Downloads
 
+# 实际递归删除重复文件
+./index.js dedupe --recursive ~/Downloads
+
 # 实际删除重复文件
-./index.js dedupe ~/Downloads
 
 # 撤销最后一次操作
 ./index.js undo

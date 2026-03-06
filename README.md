@@ -102,14 +102,22 @@ For power users who want more control, edit `~/.config/file-organizer.json`:
 # Preview organize by type (no changes)
 ./index.js organize --type --preview ~/Downloads
 
+# Organize by type recursively (including subdirectories)
+./index.js organize --type --recursive ~/Downloads
+
 # Organize by date
 ./index.js organize --date ~/Downloads
+
+# Organize by date recursively
+./index.js organize --date -r ~/Downloads
 
 # Preview remove duplicates
 ./index.js dedupe --preview ~/Downloads
 
+# Actually remove duplicates recursively
+./index.js dedupe --recursive ~/Downloads
+
 # Actually remove duplicates
-./index.js dedupe ~/Downloads
 
 # Undo last operation
 ./index.js undo
