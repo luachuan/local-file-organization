@@ -3,6 +3,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-03-06
+
+### Added
+- Implemented watch mode (watch command) to monitor directories and auto-organize new files
+- Supports --date flag for watch mode to organize by date instead of type
+- Supports --recursive/-r flag for watch mode to monitor subdirectories
+
 ## [1.1.0] - 2026-03-06
 
 ### Added

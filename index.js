@@ -273,6 +273,37 @@ function generateReport(dir, config) {
   };
 }
 
+function watchDir(dir, config, organizeBy = 'type', recursive = false) {
+  console.log(`Watching ${dir} for changes (organize by: ${organizeBy}, recursive: ${recursive})...`);
+  console.log('Press Ctrl+C to stop.');
+
+  const watchedFiles = new Set();
+  let debounceTimer = null;
+
+  function scanAndOrganize() {
+    if (organizeBy === 'type') {
+      organizeByType(dir, config, false, recursive);
+    } else if (organizeBy === 'date') {
+      organizeByDate(dir, config, false, recursive);
+    }
+  }
+
+  function handleChange(eventType, filename) {
+    if (!filename) return;
+    const filePath = path.join(dir, filename);
+    if (watchedFiles.has(filePath)) return;
+
+    watchedFiles.add(filePath);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      scanAndOrganize();
+      watchedFiles.clear();
+    }, 500);
+  }
+
+  fs.watch(dir, { recursive }, handleChange);
+}
+
 const args = process.argv.slice(2);
 const command = args[0];
 const config = loadConfig();
@@ -294,6 +325,9 @@ if (command === 'organize' && args.includes('--type')) {
   console.log(organizeByDate(targetDir, config, preview, recursive));
 } else if (command === 'dedupe') {
   console.log(dedupe(targetDir, config, preview, recursive));
+} else if (command === 'watch') {
+  const organizeBy = args.includes('--date') ? 'date' : 'type';
+  watchDir(targetDir, config, organizeBy, recursive);
 } else if (command === 'undo') {
   undoLast();
 } else if (command === 'report') {
@@ -309,6 +343,7 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('Usage:');
   console.log('  node index.js organize --type|--date [--preview] [--recursive|-r] <dir>  Organize files');
   console.log('  node index.js dedupe [--preview] [--recursive|-r] <dir>                  Remove duplicates');
+  console.log('  node index.js watch [--date] [--recursive|-r] <dir>                        Watch and auto-organize');
   console.log('  node index.js undo                                          Undo last operation');
   console.log('  node index.js report <dir>                                   Generate report');
   console.log('  node index.js config [--init]                                Show/init config');
