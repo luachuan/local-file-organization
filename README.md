@@ -5,6 +5,12 @@ Your files deserve better.
 
 ---
 
+中文用户请移步 [中文版 README](README.zh-CN.md)。
+
+---
+
+---
+
 ## The Problem
 
 Your Downloads folder is a mess. You can't find that photo from last month. That PDF you need is buried under 300 other files.
