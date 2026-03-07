@@ -3,6 +3,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-03-07
+
+### Added
+- New `--exclude` option for organize and dedupe commands to skip specific files or directories
+- Supports simple wildcards (e.g., `--exclude "node_modules"`, `--exclude "*.log"`)
+- Can be used multiple times to exclude multiple items
+- Improved help text for better usability
+
 ## [1.2.0] - 2026-03-06
 
 ### Added

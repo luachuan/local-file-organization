@@ -76,23 +76,36 @@ function getFileHash(filePath) {
   return hash.digest('hex');
 }
 
-function getAllFiles(dir, recursive = false) {
+function getAllFiles(dir, recursive = false, exclude = []) {
   let files = [];
   const entries = fs.readdirSync(dir);
   for (const entry of entries) {
     const fullPath = path.join(dir, entry);
+    const relativePath = path.relative(dir, fullPath);
+    
+    // Check if this entry is excluded
+    const isExcluded = exclude.some(ex => {
+      // Exact match or wildcard match (simple)
+      if (ex === relativePath) return true;
+      if (ex.endsWith('*') && relativePath.startsWith(ex.slice(0, -1))) return true;
+      if (ex.startsWith('*') && relativePath.endsWith(ex.slice(1))) return true;
+      return false;
+    });
+    
+    if (isExcluded) continue;
+    
     const stat = fs.statSync(fullPath);
     if (stat.isFile()) {
       files.push(fullPath);
     } else if (stat.isDirectory() && recursive) {
-      files = files.concat(getAllFiles(fullPath, recursive));
+      files = files.concat(getAllFiles(fullPath, recursive, exclude));
     }
   }
   return files;
 }
 
-function organizeByType(dir, config, preview = false, recursive = false) {
-  const files = getAllFiles(dir, recursive).map(f => path.relative(dir, f));
+function organizeByType(dir, config, preview = false, recursive = false, exclude = []) {
+  const files = getAllFiles(dir, recursive, exclude).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
@@ -133,8 +146,8 @@ function organizeByType(dir, config, preview = false, recursive = false) {
   return report;
 }
 
-function organizeByDate(dir, config, preview = false, recursive = false) {
-  const files = getAllFiles(dir, recursive).map(f => path.relative(dir, f));
+function organizeByDate(dir, config, preview = false, recursive = false, exclude = []) {
+  const files = getAllFiles(dir, recursive, exclude).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
@@ -180,8 +193,8 @@ function organizeByDate(dir, config, preview = false, recursive = false) {
   return report;
 }
 
-function dedupe(dir, config, preview = false, recursive = false) {
-  const files = getAllFiles(dir, recursive);
+function dedupe(dir, config, preview = false, recursive = false, exclude = []) {
+  const files = getAllFiles(dir, recursive, exclude);
   const hashes = new Map();
   const operations = [];
 
@@ -310,21 +323,30 @@ const config = loadConfig();
 const preview = args.includes('--preview');
 const recursive = args.includes('--recursive') || args.includes('-r');
 
+// Parse exclude options
+const exclude = [];
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--exclude' && args[i + 1]) {
+    exclude.push(args[i + 1]);
+    i++; // skip the value
+  }
+}
+
 // 找到目录参数
 let targetDir = process.cwd();
 for (let i = 1; i < args.length; i++) {
-  if (!args[i].startsWith('--')) {
+  if (!args[i].startsWith('--') && args[i - 1] !== '--exclude') {
     targetDir = args[i];
     break;
   }
 }
 
 if (command === 'organize' && args.includes('--type')) {
-  console.log(organizeByType(targetDir, config, preview, recursive));
+  console.log(organizeByType(targetDir, config, preview, recursive, exclude));
 } else if (command === 'organize' && args.includes('--date')) {
-  console.log(organizeByDate(targetDir, config, preview, recursive));
+  console.log(organizeByDate(targetDir, config, preview, recursive, exclude));
 } else if (command === 'dedupe') {
-  console.log(dedupe(targetDir, config, preview, recursive));
+  console.log(dedupe(targetDir, config, preview, recursive, exclude));
 } else if (command === 'watch') {
   const organizeBy = args.includes('--date') ? 'date' : 'type';
   watchDir(targetDir, config, organizeBy, recursive);
@@ -341,10 +363,10 @@ if (command === 'organize' && args.includes('--type')) {
   }
 } else {
   console.log('Usage:');
-  console.log('  node index.js organize --type|--date [--preview] [--recursive|-r] <dir>  Organize files');
-  console.log('  node index.js dedupe [--preview] [--recursive|-r] <dir>                  Remove duplicates');
-  console.log('  node index.js watch [--date] [--recursive|-r] <dir>                        Watch and auto-organize');
-  console.log('  node index.js undo                                          Undo last operation');
-  console.log('  node index.js report <dir>                                   Generate report');
-  console.log('  node index.js config [--init]                                Show/init config');
+  console.log('  organize --type|--date [--preview] [--recursive|-r] [--exclude <path>] <dir>  Organize files');
+  console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                  Remove duplicates');
+  console.log('  watch [--date] [--recursive|-r] <dir>                                           Watch and auto-organize');
+  console.log('  undo                                                                              Undo last operation');
+  console.log('  report <dir>                                                                      Generate report');
+  console.log('  config [--init]                                                                   Show/init config');
 }
