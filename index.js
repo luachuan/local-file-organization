@@ -85,6 +85,15 @@ function getAllFiles(dir, recursive = false, exclude = []) {
     
     // Check if this entry is excluded
     const isExcluded = exclude.some(ex => {
+      // First, try regex (if starts and ends with /)
+      if (ex.startsWith('/') && ex.endsWith('/')) {
+        try {
+          const regex = new RegExp(ex.slice(1, -1));
+          if (regex.test(relativePath)) return true;
+        } catch (e) {
+          // Invalid regex, skip
+        }
+      }
       // Exact match or wildcard match (simple)
       if (ex === relativePath) return true;
       if (ex.endsWith('*') && relativePath.startsWith(ex.slice(0, -1))) return true;
@@ -286,8 +295,8 @@ function generateReport(dir, config) {
   };
 }
 
-function watchDir(dir, config, organizeBy = 'type', recursive = false) {
-  console.log(`Watching ${dir} for changes (organize by: ${organizeBy}, recursive: ${recursive})...`);
+function watchDir(dir, config, organizeBy = 'type', recursive = false, exclude = []) {
+  console.log(`Watching ${dir} for changes (organize by: ${organizeBy}, recursive: ${recursive}, exclude: ${exclude.length > 0 ? exclude.join(', ') : 'none'})...`);
   console.log('Press Ctrl+C to stop.');
 
   const watchedFiles = new Set();
@@ -295,9 +304,9 @@ function watchDir(dir, config, organizeBy = 'type', recursive = false) {
 
   function scanAndOrganize() {
     if (organizeBy === 'type') {
-      organizeByType(dir, config, false, recursive);
+      organizeByType(dir, config, false, recursive, exclude);
     } else if (organizeBy === 'date') {
-      organizeByDate(dir, config, false, recursive);
+      organizeByDate(dir, config, false, recursive, exclude);
     }
   }
 
@@ -349,7 +358,7 @@ if (command === 'organize' && args.includes('--type')) {
   console.log(dedupe(targetDir, config, preview, recursive, exclude));
 } else if (command === 'watch') {
   const organizeBy = args.includes('--date') ? 'date' : 'type';
-  watchDir(targetDir, config, organizeBy, recursive);
+  watchDir(targetDir, config, organizeBy, recursive, exclude);
 } else if (command === 'undo') {
   undoLast();
 } else if (command === 'report') {
@@ -365,8 +374,14 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('Usage:');
   console.log('  organize --type|--date [--preview] [--recursive|-r] [--exclude <path>] <dir>  Organize files');
   console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                  Remove duplicates');
-  console.log('  watch [--date] [--recursive|-r] <dir>                                           Watch and auto-organize');
+  console.log('  watch [--date] [--recursive|-r] [--exclude <path>] <dir>                        Watch and auto-organize');
   console.log('  undo                                                                              Undo last operation');
   console.log('  report <dir>                                                                      Generate report');
   console.log('  config [--init]                                                                   Show/init config');
+  console.log('');
+  console.log('Exclude tips:');
+  console.log('  - Exact path: --exclude "node_modules"');
+  console.log('  - Wildcard: --exclude "*.log"');
+  console.log('  - Regex: --exclude "/\\.tmp$/"');
+  console.log('  - Multiple: --exclude "node_modules" --exclude "*.log"');
 }

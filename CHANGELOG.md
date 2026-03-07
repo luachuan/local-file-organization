@@ -3,6 +3,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-03-07
+
+### Added
+- Regex support for --exclude option (use /pattern/ syntax, e.g., --exclude "/\.tmp$/")
+- --exclude option now supported for watch command too!
+- Improved help text with exclude usage tips
+
 ## [1.3.0] - 2026-03-07
 
 ### Added
