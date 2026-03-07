@@ -3,6 +3,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-03-07
+
+### Added
+- Default exclude patterns (configurable in ~/.config/file-organizer.json)
+- Auto-excludes: node_modules, .git, .DS_Store, Thumbs.db, *.tmp, *.log, .cache, .npm, .yarn
+- No more accidentally organizing your git repos or node_modules!
+
 ## [1.4.0] - 2026-03-07
 
 ### Added

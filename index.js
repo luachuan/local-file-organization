@@ -22,7 +22,8 @@ const DEFAULT_CONFIG = {
     code: 'Code',
     audio: 'Audio',
     other: 'Other'
-  }
+  },
+  defaultExclude: ['node_modules', '.git', '.DS_Store', 'Thumbs.db', '*.tmp', '*.log', '.cache', '.npm', '.yarn']
 };
 
 function loadConfig() {
@@ -114,7 +115,8 @@ function getAllFiles(dir, recursive = false, exclude = []) {
 }
 
 function organizeByType(dir, config, preview = false, recursive = false, exclude = []) {
-  const files = getAllFiles(dir, recursive, exclude).map(f => path.relative(dir, f));
+  const allExcludes = [...(config.defaultExclude || []), ...exclude];
+  const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
@@ -156,7 +158,8 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
 }
 
 function organizeByDate(dir, config, preview = false, recursive = false, exclude = []) {
-  const files = getAllFiles(dir, recursive, exclude).map(f => path.relative(dir, f));
+  const allExcludes = [...(config.defaultExclude || []), ...exclude];
+  const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
@@ -203,7 +206,8 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
 }
 
 function dedupe(dir, config, preview = false, recursive = false, exclude = []) {
-  const files = getAllFiles(dir, recursive, exclude);
+  const allExcludes = [...(config.defaultExclude || []), ...exclude];
+  const files = getAllFiles(dir, recursive, allExcludes);
   const hashes = new Map();
   const operations = [];
 
@@ -296,7 +300,8 @@ function generateReport(dir, config) {
 }
 
 function watchDir(dir, config, organizeBy = 'type', recursive = false, exclude = []) {
-  console.log(`Watching ${dir} for changes (organize by: ${organizeBy}, recursive: ${recursive}, exclude: ${exclude.length > 0 ? exclude.join(', ') : 'none'})...`);
+  const allExcludes = [...(config.defaultExclude || []), ...exclude];
+  console.log(`Watching ${dir} for changes (organize by: ${organizeBy}, recursive: ${recursive}, exclude: ${allExcludes.length > 0 ? allExcludes.join(', ') : 'none'})...`);
   console.log('Press Ctrl+C to stop.');
 
   const watchedFiles = new Set();
