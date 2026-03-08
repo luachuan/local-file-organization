@@ -3,6 +3,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2026-03-08
+
+### Added
+- Example config file (`config.example.json`) with more file types
+- Added support for archives (.zip, .rar, .7z, .tar, .gz, .bz2)
+- Added support for design files (.psd, .ai, .sketch, .fig, .xd, .xcf)
+- Added more default exclude patterns (.venv, __pycache__, *.pyc)
+- Easier to customize: just copy config.example.json to ~/.config/file-organizer.json and modify!
+
 ## [1.7.0] - 2026-03-08
 
 ### Added

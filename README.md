@@ -43,6 +43,20 @@ Mistakes happen. One command and it's like it never happened.
 
 ### Install
 
+#### Option 1: npm (recommended)
+
+```bash
+npm install -g local-file-organizer
+```
+
+#### Option 2: One-click install (Linux/macOS)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/luachuan/local-file-organization/master/install.sh | bash
+```
+
+#### Option 3: From source
+
 ```bash
 git clone https://github.com/luachuan/local-file-organization.git &amp;&amp; cd local-file-organization &amp;&amp; chmod +x index.js
 ```
@@ -50,10 +64,22 @@ git clone https://github.com/luachuan/local-file-organization.git &amp;&amp; cd 
 ### Use
 
 ```bash
-./index.js organize --type ~/Downloads
+lfo organize --type ~/Downloads
 ```
 
+(If you installed from source, use `./index.js` instead of `lfo`.)
+
 That's it. Your Downloads folder is organized.
+
+### Want to customize?
+
+Copy the example config and make it yours:
+
+```bash
+mkdir -p ~/.config
+curl -sSL https://raw.githubusercontent.com/luachuan/local-file-organization/master/config.example.json &gt; ~/.config/file-organizer.json
+# Then edit ~/.config/file-organizer.json to match your needs!
+```
 
 ---
 

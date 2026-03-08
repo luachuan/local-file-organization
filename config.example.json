@@ -1,0 +1,36 @@
+
+{
+  "types": {
+    "images": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".tiff"],
+    "docs": [".pdf", ".doc", ".docx", ".txt", ".md", ".xls", ".xlsx", ".ppt", ".pptx", ".rtf", ".odt", ".ods", ".odp"],
+    "videos": [".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".m4v"],
+    "code": [".js", ".ts", ".py", ".java", ".c", ".cpp", ".h", ".go", ".rs", ".html", ".css", ".json", ".xml", ".yaml", ".yml", ".sh", ".bash", ".zsh", ".php", ".rb", ".swift", ".kt", ".scala", ".sql", ".r", ".ipynb"],
+    "audio": [".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".wma"],
+    "archives": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2"],
+    "design": [".psd", ".ai", ".sketch", ".fig", ".xd", ".xcf"]
+  },
+  "targetDirs": {
+    "images": "Images",
+    "docs": "Documents",
+    "videos": "Videos",
+    "code": "Code",
+    "audio": "Audio",
+    "archives": "Archives",
+    "design": "Design",
+    "other": "Other"
+  },
+  "defaultExclude": [
+    "node_modules",
+    ".git",
+    ".DS_Store",
+    "Thumbs.db",
+    "*.tmp",
+    "*.log",
+    ".cache",
+    ".npm",
+    ".yarn",
+    ".venv",
+    "__pycache__",
+    "*.pyc"
+  ]
+}
