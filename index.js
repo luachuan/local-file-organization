@@ -114,7 +114,7 @@ function getAllFiles(dir, recursive = false, exclude = []) {
   return files;
 }
 
-function organizeByType(dir, config, preview = false, recursive = false, exclude = []) {
+function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -139,6 +139,8 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
   const log = loadLog();
   const timestamp = Date.now();
 
+  if (verbose) console.log('=== Organizing %d files by type ===', operations.length);
+  
   for (const op of operations) {
     try {
       if (!fs.existsSync(op.targetDir)) fs.mkdirSync(op.targetDir, { recursive: true });
@@ -146,18 +148,29 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
         fs.renameSync(op.src, op.dest);
         report.moved++;
         log.push({ timestamp, type: 'move', src: op.src, dest: op.dest });
+        if (verbose) console.log('  ✓ Moved: %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
       } else {
         report.skipped++;
+        if (verbose) console.log('  - Skipped (exists): %s', op.file);
       }
     } catch (e) {
       report.errors.push({ file: op.file, error: e.message });
+      if (verbose) console.log('  ✗ Error: %s - %s', op.file, e.message);
     }
   }
   saveLog(log);
+  
+  if (verbose) {
+    console.log('\n=== Summary ===');
+    console.log('  Moved: %d', report.moved);
+    console.log('  Skipped: %d', report.skipped);
+    console.log('  Errors: %d', report.errors.length);
+  }
+  
   return report;
 }
 
-function organizeByDate(dir, config, preview = false, recursive = false, exclude = []) {
+function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -170,15 +183,13 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const targetDir = path.join(dir, String(year), month);
     const dest = path.join(targetDir, path.basename(file));
-    operations.push({ type: 'move', src, dest, targetDir, file });
+    operations.push({ type: 'move', src, dest, targetDir, file, date });
   }
 
   if (preview) {
     console.log('=== Preview: Would organize %d files by date ===', operations.length);
     for (const op of operations) {
-      const stat = fs.statSync(op.src);
-      const date = new Date(stat.mtime);
-      console.log('  %s → %d/%s/%s', op.file, date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
+      console.log('  %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
     }
     return { preview: true, operations };
   }
@@ -187,6 +198,8 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
   const log = loadLog();
   const timestamp = Date.now();
 
+  if (verbose) console.log('=== Organizing %d files by date ===', operations.length);
+  
   for (const op of operations) {
     try {
       if (!fs.existsSync(op.targetDir)) fs.mkdirSync(op.targetDir, { recursive: true });
@@ -194,14 +207,25 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
         fs.renameSync(op.src, op.dest);
         report.moved++;
         log.push({ timestamp, type: 'move', src: op.src, dest: op.dest });
+        if (verbose) console.log('  ✓ Moved: %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
       } else {
         report.skipped++;
+        if (verbose) console.log('  - Skipped (exists): %s', op.file);
       }
     } catch (e) {
       report.errors.push({ file: op.file, error: e.message });
+      if (verbose) console.log('  ✗ Error: %s - %s', op.file, e.message);
     }
   }
   saveLog(log);
+  
+  if (verbose) {
+    console.log('\n=== Summary ===');
+    console.log('  Moved: %d', report.moved);
+    console.log('  Skipped: %d', report.skipped);
+    console.log('  Errors: %d', report.errors.length);
+  }
+  
   return report;
 }
 
@@ -336,6 +360,7 @@ const command = args[0];
 const config = loadConfig();
 const preview = args.includes('--preview');
 const recursive = args.includes('--recursive') || args.includes('-r');
+const verbose = args.includes('--verbose') || args.includes('-v');
 
 // Parse exclude options
 const exclude = [];
@@ -356,9 +381,9 @@ for (let i = 1; i < args.length; i++) {
 }
 
 if (command === 'organize' && args.includes('--type')) {
-  console.log(organizeByType(targetDir, config, preview, recursive, exclude));
+  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose));
 } else if (command === 'organize' && args.includes('--date')) {
-  console.log(organizeByDate(targetDir, config, preview, recursive, exclude));
+  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose));
 } else if (command === 'dedupe') {
   console.log(dedupe(targetDir, config, preview, recursive, exclude));
 } else if (command === 'watch') {
@@ -377,12 +402,18 @@ if (command === 'organize' && args.includes('--type')) {
   }
 } else {
   console.log('Usage:');
-  console.log('  organize --type|--date [--preview] [--recursive|-r] [--exclude <path>] <dir>  Organize files');
-  console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                  Remove duplicates');
-  console.log('  watch [--date] [--recursive|-r] [--exclude <path>] <dir>                        Watch and auto-organize');
-  console.log('  undo                                                                              Undo last operation');
-  console.log('  report <dir>                                                                      Generate report');
-  console.log('  config [--init]                                                                   Show/init config');
+  console.log('  organize --type|--date [--preview] [--recursive|-r] [--verbose|-v] [--exclude <path>] <dir>  Organize files');
+  console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                                      Remove duplicates');
+  console.log('  watch [--date] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
+  console.log('  undo                                                                                                Undo last operation');
+  console.log('  report <dir>                                                                                        Generate report');
+  console.log('  config [--init]                                                                                     Show/init config');
+  console.log('');
+  console.log('Options:');
+  console.log('  --preview     Show what would be done without actually doing it');
+  console.log('  --recursive, -r  Recursively organize subdirectories');
+  console.log('  --verbose, -v  Show detailed output of each operation');
+  console.log('  --exclude <path>  Exclude specific files/directories (supports wildcards and regex)');
   console.log('');
   console.log('Exclude tips:');
   console.log('  - Exact path: --exclude "node_modules"');

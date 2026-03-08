@@ -3,6 +3,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-03-08
+
+### Added
+- New `--verbose` / `-v` option for organize commands to show detailed output
+- See exactly which files are being moved, skipped, or errored
+- Summary report at the end with total moved/skipped/errors
+- Improved help text with clearer option descriptions
+
 ## [1.5.0] - 2026-03-07
 
 ### Added
