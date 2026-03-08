@@ -3,6 +3,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-03-08
+
+### Added
+- One-click install script (`install.sh`) for Linux/macOS users
+- Even easier to get started: just `curl -sSL https://raw.githubusercontent.com/luachuan/local-file-organization/master/install.sh | bash`
+- Automatic npm check and installation
+- Friendly post-install instructions with quick examples
+
 ## [1.6.0] - 2026-03-08
 
 ### Added
