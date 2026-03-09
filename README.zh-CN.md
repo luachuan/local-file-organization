@@ -65,10 +65,9 @@ git clone https://github.com/luachuan/local-file-organization.git &amp;&amp; cd 
 
 ### 查看这个旅程
 
-这不是一个黑盒子。我们记录了*一切*：
+这不是一个黑盒子。我们快速发布，频繁迭代：
 
-- [完整构建日志](https://github.com/luachuan/local-file-organization/blob/master/TRACKING.md) - 每次发布、每个决策
-- [迭代经验](https://github.com/luachuan/local-file-organization/blob/master/ITERATION_EXPERIENCE.md) - 什么有效、什么无效、下一步是什么
+- [变更日志](https://github.com/luachuan/local-file-organization/blob/master/CHANGELOG.md) - 每次发布、每个新功能
 
 ### 但等等 - 这仍然是*你的*工具
 
