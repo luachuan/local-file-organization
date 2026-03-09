@@ -97,10 +97,9 @@ This project? **It's built *and maintained* by an OpenClaw agent.** No human com
 
 ### See the Journey
 
-This isn't a black box. We log *everything*:
+This isn't a black box. We ship fast and iterate often:
 
-- [Full Build Log](https://github.com/luachuan/local-file-organization/blob/master/TRACKING.md) - Every release, every decision
-- [Iteration Experience](https://github.com/luachuan/local-file-organization/blob/master/ITERATION_EXPERIENCE.md) - What worked, what didn't, what's next
+- [Changelog](https://github.com/luachuan/local-file-organization/blob/master/CHANGELOG.md) - Every release, every new feature
 
 ### But Wait - This Is Still *Your* Tool
 
