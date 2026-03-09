@@ -370,19 +370,65 @@ function undoLast() {
   console.log('Undone %d operations', undone);
 }
 
-function generateReport(dir, config) {
-  const files = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isFile());
-  const dirs = fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory());
-  const typeCounts = {};
-  for (const file of files) {
-    const type = getFileType(path.join(dir, file), config);
-    typeCounts[type] = (typeCounts[type] || 0) + 1;
+function generateReport(dir, config, recursive = false) {
+  const allFiles = [];
+  const allDirs = [];
+  
+  function scan(currentDir) {
+    const entries = fs.readdirSync(currentDir);
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry);
+      const stat = fs.statSync(fullPath);
+      if (stat.isFile()) {
+        allFiles.push({ path: fullPath, relativePath: path.relative(dir, fullPath), size: stat.size, mtime: stat.mtime });
+      } else if (stat.isDirectory()) {
+        allDirs.push({ path: fullPath, relativePath: path.relative(dir, fullPath) });
+        if (recursive) {
+          scan(fullPath);
+        }
+      }
+    }
   }
+  
+  scan(dir);
+  
+  const typeCounts = {};
+  const extCounts = {};
+  let totalSize = 0;
+  
+  for (const file of allFiles) {
+    const type = getFileType(file.path, config);
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+    
+    const ext = path.extname(file.path).toLowerCase() || 'no-extension';
+    extCounts[ext] = (extCounts[ext] || 0) + 1;
+    
+    totalSize += file.size;
+  }
+  
+  // Sort extension counts by count descending
+  const sortedExtCounts = Object.entries(extCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20); // Top 20 extensions
+  
+  // Format size
+  function formatSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
   return {
     path: dir,
-    totalFiles: files.length,
-    totalDirs: dirs.length,
-    typeCounts
+    totalFiles: allFiles.length,
+    totalDirs: allDirs.length,
+    totalSize: totalSize,
+    totalSizeFormatted: formatSize(totalSize),
+    typeCounts,
+    topExtensions: sortedExtCounts,
+    recursive: recursive
   };
 }
 
@@ -460,7 +506,30 @@ if (command === 'organize' && args.includes('--type')) {
 } else if (command === 'undo') {
   undoLast();
 } else if (command === 'report') {
-  console.log(generateReport(targetDir, config));
+  const report = generateReport(targetDir, config, recursive);
+  
+  // Pretty print the report
+  if (!quiet) {
+    console.log('=== Directory Report ===');
+    console.log('  Path: %s', report.path);
+    console.log('  Total Files: %d', report.totalFiles);
+    console.log('  Total Directories: %d', report.totalDirs);
+    console.log('  Total Size: %s', report.totalSizeFormatted);
+    console.log('  Recursive: %s', report.recursive ? 'Yes' : 'No');
+    console.log('');
+    console.log('=== File Type Counts ===');
+    for (const [type, count] of Object.entries(report.typeCounts)) {
+      console.log('  %s: %d', type, count);
+    }
+    console.log('');
+    console.log('=== Top 20 Extensions ===');
+    for (const [ext, count] of report.topExtensions) {
+      console.log('  %s: %d', ext || '(no extension)', count);
+    }
+  }
+  
+  // Always output the JSON for machine readability
+  console.log(JSON.stringify(report, null, 2));
 } else if (command === 'config') {
   if (args.includes('--init')) {
     saveConfig(DEFAULT_CONFIG);
@@ -474,7 +543,7 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                                      Remove duplicates');
   console.log('  watch [--date|--extension] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
   console.log('  undo                                                                                                Undo last operation');
-  console.log('  report <dir>                                                                                        Generate report');
+  console.log('  report [--recursive|-r] <dir>                                                                     Generate report (show file counts, sizes, types, extensions)');
   console.log('  config [--init]                                                                                     Show/init config');
   console.log('');
   console.log('Options:');

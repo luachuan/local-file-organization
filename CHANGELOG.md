@@ -3,6 +3,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] - 2026-03-09
+
+### Added
+- Enhanced `report` command with detailed statistics
+- Now shows total file count, directory count, total size (formatted), file type counts, and top 20 extensions
+- New `--recursive` / `-r` option for report command to scan subdirectories too
+- Pretty printed output for easy reading + JSON output for machine readability
+
 ## [1.9.0] - 2026-03-09
 
 ### Added
