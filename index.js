@@ -170,7 +170,66 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
   return report;
 }
 
-function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false) {
+function organizeByExtension(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false) {
+  const allExcludes = [...(config.defaultExclude || []), ...exclude];
+  const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
+  const operations = [];
+
+  for (const file of files) {
+    const src = path.join(dir, file);
+    const ext = path.extname(src).toLowerCase() || 'no-extension';
+    const extDir = ext.startsWith('.') ? ext.slice(1).toUpperCase() : ext.toUpperCase();
+    const targetDir = path.join(dir, extDir);
+    const dest = path.join(targetDir, path.basename(file));
+    operations.push({ type: 'move', src, dest, targetDir, file, ext });
+  }
+
+  if (preview) {
+    if (!quiet) {
+      console.log('=== Preview: Would organize %d files by extension ===', operations.length);
+      for (const op of operations) {
+        console.log('  %s → %s/%s', op.file, op.ext.startsWith('.') ? op.ext.slice(1).toUpperCase() : op.ext.toUpperCase(), path.basename(op.file));
+      }
+    }
+    return { preview: true, operations };
+  }
+
+  const report = { moved: 0, skipped: 0, errors: [] };
+  const log = loadLog();
+  const timestamp = Date.now();
+
+  if (verbose &amp;&amp; !quiet) console.log('=== Organizing %d files by extension ===', operations.length);
+  
+  for (const op of operations) {
+    try {
+      if (!fs.existsSync(op.targetDir)) fs.mkdirSync(op.targetDir, { recursive: true });
+      if (!fs.existsSync(op.dest)) {
+        fs.renameSync(op.src, op.dest);
+        report.moved++;
+        log.push({ timestamp, type: 'move', src: op.src, dest: op.dest });
+        if (verbose &amp;&amp; !quiet) console.log('  ✓ Moved: %s → %s/%s', op.file, op.ext.startsWith('.') ? op.ext.slice(1).toUpperCase() : op.ext.toUpperCase(), path.basename(op.file));
+      } else {
+        report.skipped++;
+        if (verbose &amp;&amp; !quiet) console.log('  - Skipped (exists): %s', op.file);
+      }
+    } catch (e) {
+      report.errors.push({ file: op.file, error: e.message });
+      if (verbose &amp;&amp; !quiet) console.log('  ✗ Error: %s - %s', op.file, e.message);
+    }
+  }
+  saveLog(log);
+  
+  if (verbose &amp;&amp; !quiet) {
+    console.log('\n=== Summary ===');
+    console.log('  Moved: %d', report.moved);
+    console.log('  Skipped: %d', report.skipped);
+    console.log('  Errors: %d', report.errors.length);
+  }
+  
+  return report;
+}
+
+function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -187,9 +246,11 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
   }
 
   if (preview) {
-    console.log('=== Preview: Would organize %d files by date ===', operations.length);
-    for (const op of operations) {
-      console.log('  %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
+    if (!quiet) {
+      console.log('=== Preview: Would organize %d files by date ===', operations.length);
+      for (const op of operations) {
+        console.log('  %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
+      }
     }
     return { preview: true, operations };
   }
@@ -198,7 +259,7 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
   const log = loadLog();
   const timestamp = Date.now();
 
-  if (verbose) console.log('=== Organizing %d files by date ===', operations.length);
+  if (verbose &amp;&amp; !quiet) console.log('=== Organizing %d files by date ===', operations.length);
   
   for (const op of operations) {
     try {
@@ -207,19 +268,19 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
         fs.renameSync(op.src, op.dest);
         report.moved++;
         log.push({ timestamp, type: 'move', src: op.src, dest: op.dest });
-        if (verbose) console.log('  ✓ Moved: %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
+        if (verbose &amp;&amp; !quiet) console.log('  ✓ Moved: %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
       } else {
         report.skipped++;
-        if (verbose) console.log('  - Skipped (exists): %s', op.file);
+        if (verbose &amp;&amp; !quiet) console.log('  - Skipped (exists): %s', op.file);
       }
     } catch (e) {
       report.errors.push({ file: op.file, error: e.message });
-      if (verbose) console.log('  ✗ Error: %s - %s', op.file, e.message);
+      if (verbose &amp;&amp; !quiet) console.log('  ✗ Error: %s - %s', op.file, e.message);
     }
   }
   saveLog(log);
   
-  if (verbose) {
+  if (verbose &amp;&amp; !quiet) {
     console.log('\n=== Summary ===');
     console.log('  Moved: %d', report.moved);
     console.log('  Skipped: %d', report.skipped);
