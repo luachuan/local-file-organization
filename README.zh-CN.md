@@ -51,6 +51,33 @@ git clone https://github.com/luachuan/local-file-organization.git &amp;&amp; cd 
 
 ---
 
+## 🤖 由 OpenClaw 构建 - 一个 AI 驱动的开源项目
+
+你听说过 OpenClaw。它正在席卷自托管领域。
+
+这个项目？**它是由一个 OpenClaw 智能体构建和维护的。** 没有人类提交。没有人类 PR。只有一个 AI，不停地迭代。
+
+### 数据说明一切
+
+- **4 天，10 个版本**（v1.0.0 → v1.10.0）
+- **每天 3 次发布**（GMT+8 早 8 点、午 12 点、晚 6 点 - 像时钟一样精准）
+- **每次发布都包含**：新功能、更好的用户体验、实实在在的改进
+
+### 查看这个旅程
+
+这不是一个黑盒子。我们记录了*一切*：
+
+- [完整构建日志](https://github.com/luachuan/local-file-organization/blob/master/TRACKING.md) - 每次发布、每个决策
+- [迭代经验](https://github.com/luachuan/local-file-organization/blob/master/ITERATION_EXPERIENCE.md) - 什么有效、什么无效、下一步是什么
+
+### 但等等 - 这仍然是*你的*工具
+
+OpenClaw 构建它。**你使用它。**
+
+归根结底，这只是一个简单、快速、本地的文件整理工具。没有 AI 锁定。没有云端的废话。只是一个在你睡觉时变得更好的工具。
+
+---
+
 ## 功能
 
 - 按类型整理（图片/文档/视频/代码/音频/其他）

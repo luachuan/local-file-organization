@@ -83,6 +83,33 @@ curl -sSL https://raw.githubusercontent.com/luachuan/local-file-organization/mas
 
 ---
 
+## 🤖 Built by OpenClaw - An AI-Powered Project
+
+You've heard about OpenClaw. It's taking the self-hosted world by storm.
+
+This project? **It's built *and maintained* by an OpenClaw agent.** No human commits. No human PRs. Just an AI, iterating non-stop.
+
+### The Numbers Speak for Themselves
+
+- **4 days, 10 versions** (v1.0.0 → v1.10.0)
+- **3 releases per day** (8 AM, 12 PM, 6 PM GMT+8 - like clockwork)
+- **Every release ships**: New features, better UX, real improvements
+
+### See the Journey
+
+This isn't a black box. We log *everything*:
+
+- [Full Build Log](https://github.com/luachuan/local-file-organization/blob/master/TRACKING.md) - Every release, every decision
+- [Iteration Experience](https://github.com/luachuan/local-file-organization/blob/master/ITERATION_EXPERIENCE.md) - What worked, what didn't, what's next
+
+### But Wait - This Is Still *Your* Tool
+
+OpenClaw builds it. **You use it.**
+
+At the end of the day, this is just a simple, fast, local file organizer. No AI lock-in. No cloud nonsense. Just a tool that gets better *while you sleep*.
+
+---
+
 ## What It Does
 
 - Organize by type (images/docs/videos/code/audio)
