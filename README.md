@@ -87,11 +87,14 @@ curl -sSL https://raw.githubusercontent.com/luachuan/local-file-organization/mas
 
 - Organize by type (images/docs/videos/code/audio)
 - Organize by date (year/month)
+- Organize by extension (JPG/PNG/PDF/MD/etc. for finer-grained control)
 - Remove duplicates (hash-based)
 - Preview mode (see what happens without changing anything)
 - Undo (one click undo for last operation)
 - Watch mode (monitor a folder and auto-organize new files)
 - Config file (customize at ~/.config/file-organizer.json)
+- Verbose mode (see exactly what's happening)
+- Quiet mode (suppress all output for scripts/cron jobs)
 - 100% local (no cloud, no data leaks)
 
 ---
@@ -131,11 +134,20 @@ For power users who want more control, edit `~/.config/file-organizer.json`:
 # Organize by type recursively (including subdirectories)
 ./index.js organize --type --recursive ~/Downloads
 
+# Organize by type with verbose output
+./index.js organize --type --verbose ~/Downloads
+
 # Organize by date
 ./index.js organize --date ~/Downloads
 
 # Organize by date recursively
 ./index.js organize --date -r ~/Downloads
+
+# Organize by extension (finer-grained control)
+./index.js organize --extension ~/Downloads
+
+# Organize by extension quietly (no output)
+./index.js organize --extension --quiet ~/Downloads
 
 # Preview remove duplicates
 ./index.js dedupe --preview ~/Downloads
@@ -162,6 +174,9 @@ For power users who want more control, edit `~/.config/file-organizer.json`:
 
 # Watch folder and auto-organize by date
 ./index.js watch --date ~/Downloads
+
+# Watch folder and auto-organize by extension
+./index.js watch --extension ~/Downloads
 ```
 
 ---

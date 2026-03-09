@@ -3,6 +3,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2026-03-09
+
+### Added
+- New `--extension` option for organize command to organize files directly by file extension
+- New `--quiet` / `-q` option to suppress all output (great for scripts/cron jobs)
+- --extension option supported for watch command too!
+- Now you can organize files into folders like "JPG", "PNG", "PDF", "MD" for finer-grained control
+
 ## [1.8.0] - 2026-03-08
 
 ### Added

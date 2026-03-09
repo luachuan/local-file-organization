@@ -114,7 +114,7 @@ function getAllFiles(dir, recursive = false, exclude = []) {
   return files;
 }
 
-function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false) {
+function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -128,9 +128,11 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
   }
 
   if (preview) {
-    console.log('=== Preview: Would organize %d files ===', operations.length);
-    for (const op of operations) {
-      console.log('  %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
+    if (!quiet) {
+      console.log('=== Preview: Would organize %d files ===', operations.length);
+      for (const op of operations) {
+        console.log('  %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
+      }
     }
     return { preview: true, operations };
   }
@@ -139,7 +141,7 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
   const log = loadLog();
   const timestamp = Date.now();
 
-  if (verbose) console.log('=== Organizing %d files by type ===', operations.length);
+  if (verbose &amp;&amp; !quiet) console.log('=== Organizing %d files by type ===', operations.length);
   
   for (const op of operations) {
     try {
@@ -148,19 +150,19 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
         fs.renameSync(op.src, op.dest);
         report.moved++;
         log.push({ timestamp, type: 'move', src: op.src, dest: op.dest });
-        if (verbose) console.log('  ✓ Moved: %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
+        if (verbose &amp;&amp; !quiet) console.log('  ✓ Moved: %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
       } else {
         report.skipped++;
-        if (verbose) console.log('  - Skipped (exists): %s', op.file);
+        if (verbose &amp;&amp; !quiet) console.log('  - Skipped (exists): %s', op.file);
       }
     } catch (e) {
       report.errors.push({ file: op.file, error: e.message });
-      if (verbose) console.log('  ✗ Error: %s - %s', op.file, e.message);
+      if (verbose &amp;&amp; !quiet) console.log('  ✗ Error: %s - %s', op.file, e.message);
     }
   }
   saveLog(log);
   
-  if (verbose) {
+  if (verbose &amp;&amp; !quiet) {
     console.log('\n=== Summary ===');
     console.log('  Moved: %d', report.moved);
     console.log('  Skipped: %d', report.skipped);
@@ -397,6 +399,8 @@ function watchDir(dir, config, organizeBy = 'type', recursive = false, exclude =
       organizeByType(dir, config, false, recursive, exclude);
     } else if (organizeBy === 'date') {
       organizeByDate(dir, config, false, recursive, exclude);
+    } else if (organizeBy === 'extension') {
+      organizeByExtension(dir, config, false, recursive, exclude);
     }
   }
 
@@ -422,6 +426,7 @@ const config = loadConfig();
 const preview = args.includes('--preview');
 const recursive = args.includes('--recursive') || args.includes('-r');
 const verbose = args.includes('--verbose') || args.includes('-v');
+const quiet = args.includes('--quiet') || args.includes('-q');
 
 // Parse exclude options
 const exclude = [];
@@ -442,13 +447,15 @@ for (let i = 1; i < args.length; i++) {
 }
 
 if (command === 'organize' && args.includes('--type')) {
-  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose));
+  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose, quiet));
 } else if (command === 'organize' && args.includes('--date')) {
-  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose));
+  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose, quiet));
+} else if (command === 'organize' && args.includes('--extension')) {
+  console.log(organizeByExtension(targetDir, config, preview, recursive, exclude, verbose, quiet));
 } else if (command === 'dedupe') {
   console.log(dedupe(targetDir, config, preview, recursive, exclude));
 } else if (command === 'watch') {
-  const organizeBy = args.includes('--date') ? 'date' : 'type';
+  const organizeBy = args.includes('--date') ? 'date' : (args.includes('--extension') ? 'extension' : 'type');
   watchDir(targetDir, config, organizeBy, recursive, exclude);
 } else if (command === 'undo') {
   undoLast();
@@ -463,9 +470,9 @@ if (command === 'organize' && args.includes('--type')) {
   }
 } else {
   console.log('Usage:');
-  console.log('  organize --type|--date [--preview] [--recursive|-r] [--verbose|-v] [--exclude <path>] <dir>  Organize files');
+  console.log('  organize --type|--date|--extension [--preview] [--recursive|-r] [--verbose|-v] [--quiet|-q] [--exclude <path>] <dir>  Organize files');
   console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                                      Remove duplicates');
-  console.log('  watch [--date] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
+  console.log('  watch [--date|--extension] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
   console.log('  undo                                                                                                Undo last operation');
   console.log('  report <dir>                                                                                        Generate report');
   console.log('  config [--init]                                                                                     Show/init config');
@@ -474,6 +481,7 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('  --preview     Show what would be done without actually doing it');
   console.log('  --recursive, -r  Recursively organize subdirectories');
   console.log('  --verbose, -v  Show detailed output of each operation');
+  console.log('  --quiet, -q  Suppress all output');
   console.log('  --exclude <path>  Exclude specific files/directories (supports wildcards and regex)');
   console.log('');
   console.log('Exclude tips:');
