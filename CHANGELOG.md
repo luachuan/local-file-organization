@@ -3,6 +3,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.0] - 2026-03-10
+
+### Added
+- New `--dry-run` option (alias for `--preview`) for users familiar with dry-run terminology
+- New `--since <date>` option to only organize files modified after a specific date (ISO format, e.g., 2026-03-01)
+- Supported for all organize commands (--type, --date, --extension)
+- Helps with incremental organizing, only touching new/modified files
+
 ## [1.10.0] - 2026-03-09
 
 ### Added

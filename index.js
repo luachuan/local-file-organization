@@ -114,13 +114,15 @@ function getAllFiles(dir, recursive = false, exclude = []) {
   return files;
 }
 
-function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false) {
+function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
     const src = path.join(dir, file);
+    const stat = fs.statSync(src);
+    if (sinceDate && stat.mtime < sinceDate) continue; // Skip if older than sinceDate
     const type = getFileType(src, config);
     const targetDir = path.join(dir, config.targetDirs[type]);
     const dest = path.join(targetDir, path.basename(file));
@@ -172,13 +174,15 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
   return report;
 }
 
-function organizeByExtension(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false) {
+function organizeByExtension(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
 
   for (const file of files) {
     const src = path.join(dir, file);
+    const stat = fs.statSync(src);
+    if (sinceDate && stat.mtime < sinceDate) continue; // Skip if older than sinceDate
     const ext = path.extname(src).toLowerCase() || 'no-extension';
     const extDir = ext.startsWith('.') ? ext.slice(1).toUpperCase() : ext.toUpperCase();
     const targetDir = path.join(dir, extDir);
@@ -231,7 +235,7 @@ function organizeByExtension(dir, config, preview = false, recursive = false, ex
   return report;
 }
 
-function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false) {
+function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -239,6 +243,7 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
   for (const file of files) {
     const src = path.join(dir, file);
     const stat = fs.statSync(src);
+    if (sinceDate && stat.mtime < sinceDate) continue; // Skip if older than sinceDate
     const date = new Date(stat.mtime);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -469,10 +474,19 @@ function watchDir(dir, config, organizeBy = 'type', recursive = false, exclude =
 const args = process.argv.slice(2);
 const command = args[0];
 const config = loadConfig();
-const preview = args.includes('--preview');
+const preview = args.includes('--preview') || args.includes('--dry-run');
 const recursive = args.includes('--recursive') || args.includes('-r');
 const verbose = args.includes('--verbose') || args.includes('-v');
 const quiet = args.includes('--quiet') || args.includes('-q');
+
+// Parse --since option
+let sinceDate = null;
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--since' && args[i + 1]) {
+    sinceDate = new Date(args[i + 1]);
+    i++; // skip the value
+  }
+}
 
 // Parse exclude options
 const exclude = [];
@@ -493,11 +507,11 @@ for (let i = 1; i < args.length; i++) {
 }
 
 if (command === 'organize' && args.includes('--type')) {
-  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose, quiet));
+  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate));
 } else if (command === 'organize' && args.includes('--date')) {
-  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose, quiet));
+  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate));
 } else if (command === 'organize' && args.includes('--extension')) {
-  console.log(organizeByExtension(targetDir, config, preview, recursive, exclude, verbose, quiet));
+  console.log(organizeByExtension(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate));
 } else if (command === 'dedupe') {
   console.log(dedupe(targetDir, config, preview, recursive, exclude));
 } else if (command === 'watch') {
@@ -539,7 +553,7 @@ if (command === 'organize' && args.includes('--type')) {
   }
 } else {
   console.log('Usage:');
-  console.log('  organize --type|--date|--extension [--preview] [--recursive|-r] [--verbose|-v] [--quiet|-q] [--exclude <path>] <dir>  Organize files');
+  console.log('  organize --type|--date|--extension [--preview|--dry-run] [--recursive|-r] [--verbose|-v] [--quiet|-q] [--exclude <path>] [--since <date>] <dir>  Organize files');
   console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                                      Remove duplicates');
   console.log('  watch [--date|--extension] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
   console.log('  undo                                                                                                Undo last operation');
@@ -547,11 +561,12 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('  config [--init]                                                                                     Show/init config');
   console.log('');
   console.log('Options:');
-  console.log('  --preview     Show what would be done without actually doing it');
+  console.log('  --preview, --dry-run  Show what would be done without actually doing it');
   console.log('  --recursive, -r  Recursively organize subdirectories');
   console.log('  --verbose, -v  Show detailed output of each operation');
   console.log('  --quiet, -q  Suppress all output');
   console.log('  --exclude <path>  Exclude specific files/directories (supports wildcards and regex)');
+  console.log('  --since <date>  Only process files modified after this date (ISO format, e.g., 2026-03-01)');
   console.log('');
   console.log('Exclude tips:');
   console.log('  - Exact path: --exclude "node_modules"');
