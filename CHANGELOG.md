@@ -3,6 +3,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.12.0] - 2026-03-10
+
+### Added
+- New `--version` / `-V` option to show the current version number
+- Updated package.json to reflect current version (1.12.0)
+- Added version option to help text for better discoverability
+
 ## [1.11.0] - 2026-03-10
 
 ### Added

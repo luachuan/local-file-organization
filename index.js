@@ -474,6 +474,14 @@ function watchDir(dir, config, organizeBy = 'type', recursive = false, exclude =
 const args = process.argv.slice(2);
 const command = args[0];
 const config = loadConfig();
+
+// Show version and exit if --version or -V is passed
+if (args.includes('--version') || args.includes('-V')) {
+  const pkg = require('./package.json');
+  console.log(pkg.version);
+  process.exit(0);
+}
+
 const preview = args.includes('--preview') || args.includes('--dry-run');
 const recursive = args.includes('--recursive') || args.includes('-r');
 const verbose = args.includes('--verbose') || args.includes('-v');
@@ -553,6 +561,7 @@ if (command === 'organize' && args.includes('--type')) {
   }
 } else {
   console.log('Usage:');
+  console.log('  --version, -V                                                                                        Show version number');
   console.log('  organize --type|--date|--extension [--preview|--dry-run] [--recursive|-r] [--verbose|-v] [--quiet|-q] [--exclude <path>] [--since <date>] <dir>  Organize files');
   console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                                      Remove duplicates');
   console.log('  watch [--date|--extension] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
