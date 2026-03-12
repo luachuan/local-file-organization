@@ -3,6 +3,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.15.0] - 2026-03-12
+
+### Added
+- New `--move-to <target>` option for organize commands to specify a different target directory
+- Move files to any directory instead of only creating subdirectories in the current directory
+- Supported for all organize commands (--type, --date, --extension)
+- Great for organizing downloads to a separate folder, or consolidating files across locations
+
+## [1.14.0] - 2026-03-11
+
+### Added
+- New `--config-path` / `config-path` command to show config and log file paths
+- Easy to find where your config and operation logs are stored
+- Shows both `~/.config/file-organizer.json` and `~/.cache/file-organizer/operations.json`
+
+## [1.13.0] - 2026-03-11
+
+### Added
+- New `--list` / `list` command to list supported file types, target directories, and default excludes
+- Quick way to see what types are supported without opening the config file
+- Shows default target directory mappings too
+- Great for getting started quickly
+
 ## [1.12.0] - 2026-03-10
 
 ### Added
