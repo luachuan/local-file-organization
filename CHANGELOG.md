@@ -3,6 +3,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.0] - 2026-03-12
+
+### Added
+- New `--copy` option for organize commands to copy files instead of moving them
+- Safer for first-time use - keep original files intact while organizing
+- Supported for all organize commands (--type, --date, --extension)
+- Works with --move-to option too - copy files to a different directory
+- All operations logged to operations log for undo (though undo only works for move operations)
+
 ## [1.15.0] - 2026-03-12
 
 ### Added
