@@ -1,6 +1,6 @@
 {
   "name": "local-file-organizer",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "本地文件整理助手 - 按类型/日期整理文件，删除重复项，支持预览和撤销！",
   "main": "index.js",
   "bin": {
