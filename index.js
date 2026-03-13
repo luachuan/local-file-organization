@@ -114,7 +114,59 @@ function getAllFiles(dir, recursive = false, exclude = []) {
   return files;
 }
 
-function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null, moveTo = null, copy = false) {
+function deleteEmptyDirectories(dir, exclude = [], verbose = false, quiet = false) {
+  let deletedCount = 0;
+  
+  function scanAndDelete(currentDir) {
+    const entries = fs.readdirSync(currentDir);
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry);
+      const relativePath = path.relative(dir, fullPath);
+      
+      // Check if excluded
+      const isExcluded = exclude.some(ex => {
+        if (ex.startsWith('/') && ex.endsWith('/')) {
+          try {
+            const regex = new RegExp(ex.slice(1, -1));
+            if (regex.test(relativePath)) return true;
+          } catch (e) {}
+        }
+        if (ex === relativePath) return true;
+        if (ex.endsWith('*') && relativePath.startsWith(ex.slice(0, -1))) return true;
+        if (ex.startsWith('*') && relativePath.endsWith(ex.slice(1))) return true;
+        return false;
+      });
+      
+      if (isExcluded) continue;
+      
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        scanAndDelete(fullPath);
+        
+        // After scanning children, check if this directory is now empty
+        const remainingEntries = fs.readdirSync(fullPath);
+        if (remainingEntries.length === 0) {
+          try {
+            fs.rmdirSync(fullPath);
+            deletedCount++;
+            if (verbose && !quiet) {
+              console.log('  ✓ Deleted empty directory: %s', path.relative(dir, fullPath));
+            }
+          } catch (e) {
+            if (verbose && !quiet) {
+              console.log('  ✗ Could not delete: %s - %s', path.relative(dir, fullPath), e.message);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  scanAndDelete(dir);
+  return deletedCount;
+}
+
+function organizeByType(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null, moveTo = null, copy = false, deleteEmpty = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -135,6 +187,9 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
       console.log('=== Preview: Would %s %d files ===', copy ? 'copy' : 'organize', operations.length);
       for (const op of operations) {
         console.log('  %s → %s', op.file, path.join(config.targetDirs[getFileType(op.src, config)], path.basename(op.file)));
+      }
+      if (deleteEmpty) {
+        console.log('\n  Would also delete empty directories after organizing');
       }
     }
     return { preview: true, operations };
@@ -172,17 +227,26 @@ function organizeByType(dir, config, preview = false, recursive = false, exclude
   }
   saveLog(log);
   
+  let emptyDirsDeleted = 0;
+  if (deleteEmpty && !copy) {
+    if (verbose && !quiet) console.log('\n=== Deleting empty directories ===');
+    emptyDirsDeleted = deleteEmptyDirectories(dir, allExcludes, verbose, quiet);
+  }
+  
   if (verbose && !quiet) {
     console.log('\n=== Summary ===');
     console.log('  %s: %d', copy ? 'Copied' : 'Moved', copy ? report.copied : report.moved);
     console.log('  Skipped: %d', report.skipped);
     console.log('  Errors: %d', report.errors.length);
+    if (deleteEmpty && !copy) {
+      console.log('  Empty directories deleted: %d', emptyDirsDeleted);
+    }
   }
   
-  return report;
+  return { ...report, emptyDirsDeleted };
 }
 
-function organizeByExtension(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null, moveTo = null, copy = false) {
+function organizeByExtension(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null, moveTo = null, copy = false, deleteEmpty = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -204,6 +268,9 @@ function organizeByExtension(dir, config, preview = false, recursive = false, ex
       console.log('=== Preview: Would %s %d files by extension ===', copy ? 'copy' : 'organize', operations.length);
       for (const op of operations) {
         console.log('  %s → %s/%s', op.file, op.ext.startsWith('.') ? op.ext.slice(1).toUpperCase() : op.ext.toUpperCase(), path.basename(op.file));
+      }
+      if (deleteEmpty) {
+        console.log('\n  Would also delete empty directories after organizing');
       }
     }
     return { preview: true, operations };
@@ -241,17 +308,26 @@ function organizeByExtension(dir, config, preview = false, recursive = false, ex
   }
   saveLog(log);
   
+  let emptyDirsDeleted = 0;
+  if (deleteEmpty && !copy) {
+    if (verbose && !quiet) console.log('\n=== Deleting empty directories ===');
+    emptyDirsDeleted = deleteEmptyDirectories(dir, allExcludes, verbose, quiet);
+  }
+  
   if (verbose && !quiet) {
     console.log('\n=== Summary ===');
     console.log('  %s: %d', copy ? 'Copied' : 'Moved', copy ? report.copied : report.moved);
     console.log('  Skipped: %d', report.skipped);
     console.log('  Errors: %d', report.errors.length);
+    if (deleteEmpty && !copy) {
+      console.log('  Empty directories deleted: %d', emptyDirsDeleted);
+    }
   }
   
-  return report;
+  return { ...report, emptyDirsDeleted };
 }
 
-function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null, moveTo = null, copy = false) {
+function organizeByDate(dir, config, preview = false, recursive = false, exclude = [], verbose = false, quiet = false, sinceDate = null, moveTo = null, copy = false, deleteEmpty = false) {
   const allExcludes = [...(config.defaultExclude || []), ...exclude];
   const files = getAllFiles(dir, recursive, allExcludes).map(f => path.relative(dir, f));
   const operations = [];
@@ -274,6 +350,9 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
       console.log('=== Preview: Would %s %d files by date ===', copy ? 'copy' : 'organize', operations.length);
       for (const op of operations) {
         console.log('  %s → %d/%s/%s', op.file, op.date.getFullYear(), String(op.date.getMonth() + 1).padStart(2, '0'), path.basename(op.file));
+      }
+      if (deleteEmpty) {
+        console.log('\n  Would also delete empty directories after organizing');
       }
     }
     return { preview: true, operations };
@@ -311,14 +390,23 @@ function organizeByDate(dir, config, preview = false, recursive = false, exclude
   }
   saveLog(log);
   
+  let emptyDirsDeleted = 0;
+  if (deleteEmpty && !copy) {
+    if (verbose && !quiet) console.log('\n=== Deleting empty directories ===');
+    emptyDirsDeleted = deleteEmptyDirectories(dir, allExcludes, verbose, quiet);
+  }
+  
   if (verbose && !quiet) {
     console.log('\n=== Summary ===');
     console.log('  %s: %d', copy ? 'Copied' : 'Moved', copy ? report.copied : report.moved);
     console.log('  Skipped: %d', report.skipped);
     console.log('  Errors: %d', report.errors.length);
+    if (deleteEmpty && !copy) {
+      console.log('  Empty directories deleted: %d', emptyDirsDeleted);
+    }
   }
   
-  return report;
+  return { ...report, emptyDirsDeleted };
 }
 
 function dedupe(dir, config, preview = false, recursive = false, exclude = []) {
@@ -531,6 +619,7 @@ const recursive = args.includes('--recursive') || args.includes('-r');
 const verbose = args.includes('--verbose') || args.includes('-v');
 const quiet = args.includes('--quiet') || args.includes('-q');
 const copy = args.includes('--copy');
+const deleteEmpty = args.includes('--delete-empty');
 
 // Parse --since option
 let sinceDate = null;
@@ -569,11 +658,11 @@ for (let i = 1; i < args.length; i++) {
 }
 
 if (command === 'organize' && args.includes('--type')) {
-  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate, moveTo, copy));
+  console.log(organizeByType(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate, moveTo, copy, deleteEmpty));
 } else if (command === 'organize' && args.includes('--date')) {
-  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate, moveTo, copy));
+  console.log(organizeByDate(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate, moveTo, copy, deleteEmpty));
 } else if (command === 'organize' && args.includes('--extension')) {
-  console.log(organizeByExtension(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate, moveTo, copy));
+  console.log(organizeByExtension(targetDir, config, preview, recursive, exclude, verbose, quiet, sinceDate, moveTo, copy, deleteEmpty));
 } else if (command === 'dedupe') {
   console.log(dedupe(targetDir, config, preview, recursive, exclude));
 } else if (command === 'watch') {
@@ -623,7 +712,7 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('  --version, -V                                                                                        Show version number');
   console.log('  --list, list                                                                                         List supported file types, target directories, and default excludes');
   console.log('  --config-path, config-path                                                                           Show config and log file paths');
-  console.log('  organize --type|--date|--extension [--preview|--dry-run] [--recursive|-r] [--verbose|-v] [--quiet|-q] [--exclude <path>] [--since <date>] [--move-to <target>] [--copy] <dir>  Organize files');
+  console.log('  organize --type|--date|--extension [--preview|--dry-run] [--recursive|-r] [--verbose|-v] [--quiet|-q] [--exclude <path>] [--since <date>] [--move-to <target>] [--copy] [--delete-empty] <dir>  Organize files');
   console.log('  dedupe [--preview] [--recursive|-r] [--exclude <path>] <dir>                                      Remove duplicates');
   console.log('  watch [--date|--extension] [--recursive|-r] [--exclude <path>] <dir>                                          Watch and auto-organize');
   console.log('  undo                                                                                                Undo last operation');
@@ -639,6 +728,7 @@ if (command === 'organize' && args.includes('--type')) {
   console.log('  --since <date>  Only process files modified after this date (ISO format, e.g., 2026-03-01)');
   console.log('  --move-to <target>  Move/copy files to a different target directory instead of current directory');
   console.log('  --copy  Copy files instead of moving them (safer for first-time use)');
+  console.log('  --delete-empty  Delete empty directories after organizing (only works with move operations)');
   console.log('');
   console.log('Exclude tips:');
   console.log('  - Exact path: --exclude "node_modules"');

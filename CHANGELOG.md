@@ -3,6 +3,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.0] - 2026-03-13
+
+### Added
+- New `--delete-empty` option for organize commands to delete empty directories after organizing
+- Great for cleaning up after organizing - removes leftover empty folders
+- Only works with move operations (not copy, since original files remain)
+- Supported for all organize commands (--type, --date, --extension)
+- Recursively deletes empty directories from deepest level up
+- Skips excluded directories
+- Shows count of deleted directories in verbose mode
+
 ## [1.16.0] - 2026-03-12
 
 ### Added
